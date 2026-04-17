@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEO店舗診断レポート | MEOSCOPE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #eef1f8;
+  --border: #dde2ef;
+  --accent: #1a7f5e;
+  --accent2: #d93a5c;
+  --accent3: #d97706;
+  --accent4: #3b5bdb;
+  --text: #1a1d2e;
+  --text-muted: #7280a0;
+  --text-dim: #4a5270;
+  --grade-s: #059669;
+  --grade-a: #3b5bdb;
+  --grade-b: #7c3aed;
+  --grade-c: #d97706;
+  --grade-d: #ea6c00;
+  --grade-e: #d93a5c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.site-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 1px 8px rgba(60,80,140,0.06);
+}
+.logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+.logo span { color: var(--text-muted); font-weight: 400; }
+.header-meta { font-size: 12px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+.hero { padding: 72px 32px 48px; max-width: 1200px; margin: 0 auto; }
+.hero-label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; }
+.hero-title { font-size: clamp(32px,5vw,56px); font-weight: 900; line-height: 1.1; margin-bottom: 24px; background: linear-gradient(135deg, #1a1d2e 0%, #3b5bdb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-desc { font-size: 15px; color: var(--text-dim); max-width: 560px; line-height: 1.8; }
+.summary-section { padding: 0 32px 64px; max-width: 1200px; margin: 0 auto; }
+.section-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.store-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(340px,1fr)); gap: 16px; }
+.store-card { background: var(--surface); padding: 28px; cursor: pointer; transition: all 0.2s; position: relative; border-radius: 14px; border: 1.5px solid var(--border); box-shadow: 0 2px 12px rgba(60,80,140,0.06); }
+.store-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(60,80,140,0.13); border-color: var(--accent4); }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.store-name { font-size: 14px; font-weight: 700; line-height: 1.4; color: var(--text); max-width: 220px; }
+.grade-badge { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; flex-shrink: 0; }
+.grade-S { background: #d1fae5; color: var(--grade-s); }
+.grade-A { background: #dbeafe; color: var(--grade-a); }
+.grade-B { background: #ede9fe; color: var(--grade-b); }
+.grade-C { background: #fef3c7; color: var(--grade-c); }
+.grade-D { background: #ffe9cc; color: var(--grade-d); }
+.grade-E { background: #ffe4eb; color: var(--grade-e); }
+.store-addr { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+.score-bar-wrap { margin-bottom: 12px; }
+.score-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.score-bar-label strong { color: var(--text); font-family: 'Space Mono', monospace; }
+.score-bar-bg { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 4px; }
+.card-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 16px; }
+.stat-item { background: var(--surface2); border-radius: 8px; padding: 8px; text-align: center; }
+.stat-val { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text); display: block; }
+.stat-label { font-size: 9px; color: var(--text-muted); display: block; margin-top: 2px; }
+.card-cta { display: inline-block; margin-top: 16px; font-size: 11px; color: var(--accent4); font-family: 'Space Mono', monospace; cursor: pointer; text-decoration: none; font-weight: 700; }
+.card-cta:hover { text-decoration: underline; }
+.detail-section { max-width: 1200px; margin: 0 auto; padding: 0 32px 80px; }
+.detail-panel { display: none; margin-bottom: 32px; border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; animation: slideDown 0.3s ease; box-shadow: 0 4px 24px rgba(60,80,140,0.10); }
+.detail-panel.active { display: block; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+.panel-header { padding: 32px; background: var(--surface); display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--border); }
+.panel-header-left { flex: 1; }
+.panel-store-name { font-size: 24px; font-weight: 900; margin-bottom: 8px; color: var(--text); }
+.panel-addr { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.panel-tagline { font-size: 13px; color: var(--accent); background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 8px 12px; display: inline-block; line-height: 1.5; }
+.panel-tagline.alert { color: var(--accent2); background: #fff0f3; border-color: #fca5a5; }
+.panel-grade-box { text-align: center; flex-shrink: 0; }
+.panel-grade-large { width: 80px; height: 80px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 40px; font-weight: 700; margin-bottom: 6px; }
+.panel-score-total { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text-muted); }
+.panel-score-total strong { color: var(--text); font-size: 20px; }
+.panel-close { background: none; border: 1.5px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.panel-close:hover { border-color: var(--accent2); color: var(--accent2); }
+.cat-scores { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.cat-score-item { background: var(--surface); padding: 20px 16px; text-align: center; border-right: 1px solid var(--border); }
+.cat-score-item:last-child { border-right: none; }
+.cat-name { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; display: block; }
+.cat-grade { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; display: block; margin-bottom: 4px; }
+.cat-score-num { font-size: 11px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+.cat-benchmark { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+.panel-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+.tab-btn { padding: 14px 20px; background: none; border: none; border-bottom: 2.5px solid transparent; color: var(--text-muted); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent4); border-bottom-color: var(--accent4); font-weight: 700; }
+.tab-content { display: none; padding: 28px; background: var(--surface); }
+.tab-content.active { display: block; }
+.bn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bn-table th { text-align: left; padding: 8px 12px; font-size: 10px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); font-family: 'Space Mono', monospace; letter-spacing: 1px; background: var(--surface2); }
+.bn-table td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dim); line-height: 1.5; }
+.bn-table tr:last-child td { border-bottom: none; }
+.bn-table tr:hover td { background: var(--surface2); }
+.severity-high { background: #ffe4eb; color: var(--accent2); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.severity-mid { background: #fef3c7; color: var(--accent3); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.severity-low { background: #dbeafe; color: var(--accent4); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.action-list { display: flex; flex-direction: column; gap: 12px; }
+.action-item { border: 1.5px solid var(--border); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: start; background: var(--surface); }
+.action-item.quick-win { border-color: #a7f3d0; background: #f0fdf9; }
+.action-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; background: var(--surface2); color: var(--text-dim); flex-shrink: 0; }
+.action-item.quick-win .action-num { background: #d1fae5; color: var(--grade-s); }
+.action-main { flex: 1; }
+.action-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.action-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.action-meta { text-align: right; flex-shrink: 0; }
+.action-tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-bottom: 4px; }
+.tag-low { background: #d1fae5; color: var(--grade-s); }
+.tag-mid { background: #fef3c7; color: var(--accent3); }
+.action-period { font-size: 10px; color: var(--text-muted); font-family: 'Space Mono', monospace; display: block; margin-top: 4px; }
+.roadmap-col { margin-bottom: 24px; }
+.roadmap-heading { font-size: 13px; font-weight: 700; color: var(--accent4); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.roadmap-items { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.roadmap-items li { font-size: 13px; color: var(--text-dim); padding-left: 18px; position: relative; line-height: 1.6; }
+.roadmap-items li::before { content: '▸'; position: absolute; left: 0; color: var(--accent4); font-size: 10px; top: 4px; }
+.ranking-sim { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 16px; }
+.sim-card { background: linear-gradient(135deg, #eef1f8 0%, #e8ecf8 100%); border: 1.5px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.sim-period { font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-bottom: 8px; }
+.sim-rank { font-size: 32px; font-weight: 900; color: var(--accent4); font-family: 'Space Mono', monospace; display: block; }
+.sim-score { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.kw-badge { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: var(--accent4); margin-bottom: 20px; font-family: 'Space Mono', monospace; }
+.kw-badge span { color: var(--text-muted); font-size: 11px; }
+.meo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.meo-metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.meo-metric-name { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.meo-metric-val { font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
+.meo-bar-bg { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.meo-bar-fill { height: 100%; border-radius: 3px; }
+.ai-summary { background: #f0fdf9; border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 24px; font-size: 14px; line-height: 1.9; color: var(--text-dim); white-space: pre-wrap; word-break: break-word; }
+.ai-summary strong, .ai-summary b { color: var(--text); font-weight: 700; }
+.ai-label { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.ai-label-text { font-size: 11px; color: var(--accent); font-family: 'Space Mono', monospace; letter-spacing: 1px; font-weight: 700; }
+footer { border-top: 1px solid var(--border); padding: 24px 32px; text-align: center; font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; background: var(--surface); }
+@media (max-width:768px) {
+  .site-header { padding: 12px 16px; }
+  .hero { padding: 48px 16px 32px; }
+  .summary-section, .detail-section { padding: 0 16px 48px; }
+  .store-grid { grid-template-columns: 1fr; }
+  .cat-scores { grid-template-columns: repeat(3,1fr); }
+  .ranking-sim { grid-template-columns: 1fr; }
+  .meo-grid { grid-template-columns: repeat(2,1fr); }
+  .panel-header { flex-direction: column; }
+  .action-item { grid-template-columns: 28px 1fr; }
+  .action-meta { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">MEOSCOPE <span>/ REPORT</span></div>
+  <div class="header-meta">分析日: 2026.04.11 &nbsp;|&nbsp; 6店舗</div>
+</header>
+
+<section class="hero">
+  <div class="hero-label">MEO 店舗診断レポート</div>
+  <h1 class="hero-title">Google Maps<br>パフォーマンス分析</h1>
+  <p class="hero-desc">各店舗のMEO現状と改善施策をまとめた診断レポートです。店舗カードをクリックすると詳細データを確認できます。</p>
+</section>
+
+<section class="summary-section">
+  <div class="section-label">店舗一覧 — クリックで詳細表示</div>
+  <div class="store-grid">
+
+    <div class="store-card" onclick="togglePanel('store1')">
+      <div class="card-top">
+        <div class="store-name">西神田 とんかつ九六喜</div>
+        <div class="grade-badge grade-E">E</div>
+      </div>
+      <div class="store-addr">千代田区西神田2丁目1-3 トービケンビル 1F</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>48.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:48%;background:var(--grade-e)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★4.3</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">86件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">7/16位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+    <div class="store-card" onclick="togglePanel('store2')">
+      <div class="card-top">
+        <div class="store-name">マッサージほぐしやす<br>中野坂上店</div>
+        <div class="grade-badge grade-E">E</div>
+      </div>
+      <div class="store-addr">中野区中央2丁目31-8 糖信ビル 2F</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>8.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:8%;background:var(--grade-e)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★0.0</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">0件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">239/267位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+    <div class="store-card" onclick="togglePanel('store3')">
+      <div class="card-top">
+        <div class="store-name">マッサージ ほぐしやす<br>野方店</div>
+        <div class="grade-badge grade-E">E</div>
+      </div>
+      <div class="store-addr">中野区野方5丁目29-5 服部ビル 3階</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>34.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:34%;background:var(--grade-e)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★4.5</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">14件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">91/151位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+    <div class="store-card" onclick="togglePanel('store4')">
+      <div class="card-top">
+        <div class="store-name">マッサージ ほぐしやす<br>東中野</div>
+        <div class="grade-badge grade-E">E</div>
+      </div>
+      <div class="store-addr">中野区東中野3丁目8-2 トーシンアネックスビル 3階</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>34.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:34%;background:var(--grade-e)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★4.1</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">25件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">211/286位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+    <div class="store-card" onclick="togglePanel('store5')">
+      <div class="card-top">
+        <div class="store-name">マッサージ ほぐしやす<br>S中野早稲田通り店</div>
+        <div class="grade-badge grade-E">E</div>
+      </div>
+      <div class="store-addr">中野区中野5丁目51-3</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>36.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:36%;background:var(--grade-e)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★4.8</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">17件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">80/158位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+    <div class="store-card" onclick="togglePanel('store6')">
+      <div class="card-top">
+        <div class="store-name">フィクションスパイス</div>
+        <div class="grade-badge grade-D">D</div>
+      </div>
+      <div class="store-addr">新宿区高田馬場4丁目13-12 東海林ビル 2階</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label"><span>総合スコア</span><strong>59.0 / 100</strong></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:59%;background:var(--grade-d)"></div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">★4.6</span><span class="stat-label">評価</span></div>
+        <div class="stat-item"><span class="stat-val">105件</span><span class="stat-label">口コミ</span></div>
+        <div class="stat-item"><span class="stat-val">1093/5348位</span><span class="stat-label">エリア順位</span></div>
+      </div>
+      <a class="card-cta">詳細を見る →</a>
+    </div>
+
+  </div>
+</section>
+
+<section class="detail-section">
+
+  <!-- Store 1: とんかつ九六喜 -->
+  <div class="detail-panel" id="store1">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">西神田 とんかつ九六喜</div>
+        <div class="panel-addr">〒101-0065 東京都千代田区西神田2丁目1-3 トービケンビル 1F　|　★4.3 / 口コミ86件</div>
+        <div class="panel-tagline">👉 エリア上位・総合要改善(48pt)、口コミ鮮度が強み、競合力の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-E">E</div>
+        <div class="panel-score-total">総合 <strong>48.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store1')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">12点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-c)">C</span><span class="cat-score-num">65点</span><div class="cat-benchmark">平均: 36</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-s)">S</span><span class="cat-score-num">97点</span><div class="cat-benchmark">平均: 69</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-d)">D</span><span class="cat-score-num">59点</span><div class="cat-benchmark">平均: 43</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">25点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s1','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s1','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s1','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s1','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s1','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s1-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 4件 &nbsp;|&nbsp; 改善推奨: 2件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>競合力不足</td><td><span class="severity-high">高</span></td><td>エリア平均を38pt下回る</td><td>12</td><td>50</td></tr>
+          <tr><td>2</td><td>レビュー数不足</td><td><span class="severity-high">高</span></td><td>エリア平均を25pt下回る</td><td>25</td><td>50</td></tr>
+          <tr><td>3</td><td>コスパへの不満</td><td><span class="severity-high">高</span></td><td>ネガティブ5件がコスパに言及</td><td>5件</td><td>5件以下</td></tr>
+          <tr><td>4</td><td>設備への不満</td><td><span class="severity-high">高</span></td><td>ネガティブ5件が設備に言及</td><td>5件</td><td>5件以下</td></tr>
+          <tr><td>5</td><td>利便性への不満</td><td><span class="severity-mid">中</span></td><td>ネガティブ3件が利便性に言及</td><td>3件</td><td>5件以下</td></tr>
+          <tr><td>6</td><td>雰囲気への不満</td><td><span class="severity-mid">中</span></td><td>ネガティブ3件が雰囲気に言及</td><td>3件</td><td>5件以下</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s1-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 1件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">差別化ポイントの強化（強みのレビュー訴求）</div><div class="action-desc">競合との差別化が進み、選ばれる理由が明確になる</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">2</div><div class="action-main"><div class="action-title">来店客へのレビュー依頼を仕組み化する</div><div class="action-desc">レビュー獲得ペースが向上し、エリア中央値への到達が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">3</div><div class="action-main"><div class="action-title">価格設定の見直しまたは付加価値の訴求</div><div class="action-desc">コストパフォーマンスの印象改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">4</div><div class="action-main"><div class="action-title">設備の点検・更新（Wi-Fi、充電、座席等）</div><div class="action-desc">設備面の不満解消で評価改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">5</div><div class="action-main"><div class="action-title">待ち時間短縮、動線改善</div><div class="action-desc">利便性向上でネガティブ言及の減少が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">6</div><div class="action-main"><div class="action-title">店舗空間の改善（清潔感、内装、BGM等）</div><div class="action-desc">雰囲気への評価改善でリピート率向上が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s1-ranking">
+      <div class="kw-badge">🔍 「神田 とんかつ」 <span>現在 13位</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">10位</span><div class="sim-score">スコア: 55</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 59</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 62</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>既存顧客へのレビュー投稿促進キャンペーン（目標：月10-15件）</li><li>Google投稿を週2回以上の頻度で更新</li><li>ビジネスプロフィールの写真を30枚以上に増やす</li><li>低評価レビューへの丁寧な返信</li><li>「神田」「西神田」「とんかつ」を含むサービス説明文を充実</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>12ヶ月で300件以上のレビュー獲得を目標に仕組み化</li><li>評価★4.6以上を目指し、サービス品質の継続的改善</li><li>競合分析を3ヶ月ごとに実施</li><li>食べログ・ぐるなびなど外部プラットフォームも強化</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s1-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent4)">65</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent3)">46</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:46%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--grade-s)">100</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:100%;background:var(--grade-s)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent2)">2</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:2%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent4)">72</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:72%;background:var(--accent4)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--grade-s)">84</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:84%;background:var(--grade-s)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent4)">60</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:60%;background:var(--accent4)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s1-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary">神保町という「カレーとカツの激戦区」で、料理品質は高評価（★4.3）を獲得されていますが、エリア内7位という順位は<b>圧倒的な口コミ数を持つ「丸五」（3014件）や「かつ進」（469件）との認知度競争</b>で苦戦している証です。
+
+貴店の強みは口コミから明確です。「スパイスロースカツカレー」という独自メニューが複数の高評価レビューで言及され、差別化要素として機能しています。しかし<b>レビュー返信率12%は業界水準を大きく下回り</b>、せっかくの高評価を次の集客に活かせていません。
+
+2026年のAI検索環境では、Googleが「店舗と顧客の対話品質」を重視します。<b>今週中に全未返信レビュー（74件）への返信を完了</b>し、特にカツカレーへの称賛コメントには「スパイスへのこだわり」を具体的に語ることで、検索キーワード含有率（現状1%）を改善できます。</div>
+    </div>
+  </div>
+
+  <!-- Store 2: 中野坂上 -->
+  <div class="detail-panel" id="store2">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">マッサージほぐしやす 中野坂上店</div>
+        <div class="panel-addr">〒164-0011 東京都中野区中央2丁目31-8 糖信ビル 2F　|　★0.0 / 口コミ0件</div>
+        <div class="panel-tagline alert">⚠️ エリア平均以下・総合要改善(8pt)、MEO最適化が強み、口コミ品質の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-E">E</div>
+        <div class="panel-score-total">総合 <strong>8.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store2')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">10点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">20点</span><div class="cat-benchmark">平均: 60</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">0点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">0点</span><div class="cat-benchmark">平均: 65</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">10点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s2','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s2','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s2','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s2','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s2','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s2-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 5件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>レビュー品質不足</td><td><span class="severity-high">高</span></td><td>エリア平均を65pt下回る</td><td>0</td><td>65</td></tr>
+          <tr><td>2</td><td>レビュー鮮度不足</td><td><span class="severity-high">高</span></td><td>エリア平均を50pt下回る</td><td>0</td><td>50</td></tr>
+          <tr><td>3</td><td>レビュー数不足</td><td><span class="severity-high">高</span></td><td>エリア平均を40pt下回る</td><td>10</td><td>50</td></tr>
+          <tr><td>4</td><td>競合力不足</td><td><span class="severity-high">高</span></td><td>エリア平均を40pt下回る</td><td>10</td><td>50</td></tr>
+          <tr><td>5</td><td>MEO最適化不足</td><td><span class="severity-high">高</span></td><td>エリア平均を40pt下回る</td><td>20</td><td>60</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s2-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 2件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">ネガティブ要因の特定と改善</div><div class="action-desc">ネガティブレビューの減少と評価改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">2</div><div class="action-main"><div class="action-title">定期的なレビュー依頼フローの構築</div><div class="action-desc">レビュー鮮度の向上で検索アルゴリズムへの好影響が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">3</div><div class="action-main"><div class="action-title">来店客へのレビュー依頼を仕組み化する</div><div class="action-desc">レビュー獲得ペースが向上し、エリア中央値への到達が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">4</div><div class="action-main"><div class="action-title">差別化ポイントの強化（強みのレビュー訴求）</div><div class="action-desc">競合との差別化が進み、選ばれる理由が明確になる</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">5</div><div class="action-main"><div class="action-title">GBP設定の改善（写真追加、投稿、カテゴリ最適化）</div><div class="action-desc">GBPの充実度が上がり、検索表示の改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s2-ranking">
+      <div class="kw-badge">🔍 「中野坂上 マッサージ」 <span>現在 3位</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">3位</span><div class="sim-score">スコア: 32</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">3位</span><div class="sim-score">スコア: 46</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">3位</span><div class="sim-score">スコア: 55</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>初期レビュー獲得キャンペーン：30日以内に10件以上を目標</li><li>ビジネスプロフィール情報の完全化（写真15枚以上）</li><li>複数カテゴリの追加設定（マッサージ店・リラクゼーション施設等）</li><li>説明文冒頭に「中野坂上駅近くのマッサージ店」を明記</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>6ヶ月で50件、12ヶ月で100件以上のレビュー獲得を目標</li><li>評価★4.5以上の維持を目指す</li><li>NAP（名称・住所・電話番号）の一貫性確保</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s2-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent2)">20</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent2)">0</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:0%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--accent2)">0</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:0%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent3)">50</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:50%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent2)">0</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:0%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--accent3)">70</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:70%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent3)">54</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:54%;background:var(--accent3)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s2-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary"><b>【緊急】中野坂上エリアで完全に埋もれています</b>
+現在239位/267店舗という深刻な状況です。最大の問題は<b>レビューが0件</b>という事実。競合のASIESTA中野桃園店は560件、サバイディー新中野店も83件獲得する中、あなたの店舗は地図上で「信頼できない店」と判断されています。
+
+<b>今週すぐ実行すべきこと：</b>
+①来店客全員にレビュー依頼（QRコード設置）→週2件で44件到達が業界目標
+②GBPにメニュー・料金・施術内容を詳細登録→AI検索が店舗を理解できるように
+③営業時間・写真を最新化→2026年は正確性が信頼性指標に直結</div>
+    </div>
+  </div>
+
+  <!-- Store 3: 野方 -->
+  <div class="detail-panel" id="store3">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">マッサージ ほぐしやす 野方店</div>
+        <div class="panel-addr">〒165-0027 東京都中野区野方5丁目29-5 服部ビル 3階　|　★4.5 / 口コミ14件</div>
+        <div class="panel-tagline">👉 エリア平均以下・総合要改善(34pt)、口コミ品質が強み、口コミ鮮度の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-E">E</div>
+        <div class="panel-score-total">総合 <strong>34.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store3')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">36点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">32点</span><div class="cat-benchmark">平均: 60</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">3点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-d)">D</span><span class="cat-score-num">55点</span><div class="cat-benchmark">平均: 65</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">32点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s3','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s3','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s3','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s3','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s3','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s3-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 2件 &nbsp;|&nbsp; 改善推奨: 2件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>レビュー鮮度不足</td><td><span class="severity-high">高</span></td><td>エリア平均を47pt下回る</td><td>3</td><td>50</td></tr>
+          <tr><td>2</td><td>MEO最適化不足</td><td><span class="severity-high">高</span></td><td>エリア平均を28pt下回る</td><td>32</td><td>60</td></tr>
+          <tr><td>3</td><td>レビュー数不足</td><td><span class="severity-mid">中</span></td><td>エリア平均を18pt下回る</td><td>32</td><td>50</td></tr>
+          <tr><td>4</td><td>競合力不足</td><td><span class="severity-mid">中</span></td><td>エリア平均を14pt下回る</td><td>36</td><td>50</td></tr>
+          <tr><td>5</td><td>レビュー品質不足</td><td><span class="severity-low">低</span></td><td>エリア平均を10pt下回る</td><td>55</td><td>65</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s3-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 3件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">定期的なレビュー依頼フローの構築</div><div class="action-desc">レビュー鮮度の向上で検索アルゴリズムへの好影響が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">2</div><div class="action-main"><div class="action-title">GBP設定の改善（写真追加、投稿、カテゴリ最適化）</div><div class="action-desc">GBPの充実度が上がり、検索表示の改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">3</div><div class="action-main"><div class="action-title">来店客へのレビュー依頼を仕組み化する</div><div class="action-desc">レビュー獲得ペースが向上し、エリア中央値への到達が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">4</div><div class="action-main"><div class="action-title">差別化ポイントの強化</div><div class="action-desc">競合との差別化が進み、選ばれる理由が明確になる</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">5</div><div class="action-main"><div class="action-title">ネガティブ要因の特定と改善</div><div class="action-desc">ネガティブレビューの減少と評価改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s3-ranking">
+      <div class="kw-badge">🔍 「野方 マッサージ」 <span>現在 3位</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 45</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 51</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 55</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>GBPの説明・営業時間・サービスに「野方でのマッサージ」キーワードを挿入</li><li>QRコード設置・来店時声かけで月3〜5件の新規レビュー獲得を目指す</li><li>既存14件のレビューにオーナー返信で「野方店での施術」を明示</li><li>カテゴリをspa・massageに最適化</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>6ヶ月で30件以上のレビューを目標</li><li>評価4.5を4.7〜4.8に引き上げ</li><li>地域密着型施策で「野方のマッサージ店」としてのブランド認知を強化</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s3-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent2)">32</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent3)">29</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:29%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--accent3)">40</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:40%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent2)">13</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:13%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent2)">10</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:10%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--accent3)">68</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:68%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent4)">50</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:50%;background:var(--accent4)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s3-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary">野方エリアで14件のレビューで★4.5を維持している点は評価できますが、上位競合「asian relaxation villa」(79件)や「ほぐるん都立家政店」(38件)と比べ、圧倒的な認知不足が順位低下の主因です。
+
+最優先は<b>メニュー・サービス情報の即時登録</b>です。GBPに施術メニューがないため、AI検索で「肩こり 野方」「もみほぐし 料金」と検索されても候補に上がりません。料金・所要時間・効果を明記したメニュー登録が検索可視性を劇的に高めます。
+
+<b>週2件ペースのレビュー獲得</b>を目標に、施術後のQRコード提示を習慣化してください。同時に全レビューへ24時間以内返信を徹底することで、エンゲージメントスコアが改善し、ローカル検索順位が上昇します。</div>
+    </div>
+  </div>
+
+  <!-- Store 4: 東中野 -->
+  <div class="detail-panel" id="store4">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">マッサージ ほぐしやす 東中野</div>
+        <div class="panel-addr">〒164-0003 東京都中野区東中野3丁目8-2 トーシンアネックスビル 3階　|　★4.1 / 口コミ25件</div>
+        <div class="panel-tagline">👉 エリア平均以下・総合要改善(34pt)、口コミ品質が強み、口コミ鮮度の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-E">E</div>
+        <div class="panel-score-total">総合 <strong>34.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store4')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">22点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">27点</span><div class="cat-benchmark">平均: 60</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">0点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-d)">D</span><span class="cat-score-num">58点</span><div class="cat-benchmark">平均: 65</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">44点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s4','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s4','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s4','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s4','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s4','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s4-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 3件 &nbsp;|&nbsp; 改善推奨: 1件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>レビュー鮮度不足</td><td><span class="severity-high">高</span></td><td>エリア平均を50pt下回る</td><td>0</td><td>50</td></tr>
+          <tr><td>2</td><td>MEO最適化不足</td><td><span class="severity-high">高</span></td><td>エリア平均を33pt下回る</td><td>27</td><td>60</td></tr>
+          <tr><td>3</td><td>競合力不足</td><td><span class="severity-high">高</span></td><td>エリア平均を28pt下回る</td><td>22</td><td>50</td></tr>
+          <tr><td>4</td><td>コスパへの不満</td><td><span class="severity-mid">中</span></td><td>ネガティブ4件がコスパに言及</td><td>4件</td><td>5件以下</td></tr>
+          <tr><td>5</td><td>レビュー品質不足</td><td><span class="severity-low">低</span></td><td>エリア平均を7pt下回る</td><td>58</td><td>65</td></tr>
+          <tr><td>6</td><td>レビュー数不足</td><td><span class="severity-low">低</span></td><td>エリア平均を6pt下回る</td><td>44</td><td>50</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s4-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 2件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">定期的なレビュー依頼フローの構築</div><div class="action-desc">レビュー鮮度の向上で検索アルゴリズムへの好影響が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">2</div><div class="action-main"><div class="action-title">GBP設定の改善（写真追加、投稿、カテゴリ最適化）</div><div class="action-desc">GBPの充実度が上がり、検索表示の改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">3</div><div class="action-main"><div class="action-title">差別化ポイントの強化（強みのレビュー訴求）</div><div class="action-desc">競合との差別化が進み、選ばれる理由が明確になる</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">4</div><div class="action-main"><div class="action-title">価格設定の見直しまたは付加価値の訴求</div><div class="action-desc">コストパフォーマンスの印象改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">5</div><div class="action-main"><div class="action-title">ネガティブ要因の特定と改善</div><div class="action-desc">ネガティブレビューの減少と評価改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">6</div><div class="action-main"><div class="action-title">来店客へのレビュー依頼を仕組み化する</div><div class="action-desc">レビュー獲得ペースが向上し、エリア中央値への到達が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s4-ranking">
+      <div class="kw-badge">🔍 「東中野 マッサージ」 <span>現在 7位</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 45</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 51</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 55</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>既存顧客へのレビュー投稿依頼キャンペーン（3ヶ月で25件→40件目標）</li><li>説明文・サービスに「東中野」「マッサージ」「リラクゼーション」を自然に挿入</li><li>投稿機能で週1回の定期投稿開始</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>6ヶ月で50件以上にレビュー増加</li><li>評価を★4.1→★4.5以上に改善</li><li>月次で競合分析・施策の効果測定と調整</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s4-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent2)">27</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent3)">33</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:33%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--accent2)">0</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:0%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent2)">10</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:10%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent2)">19</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:19%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--accent3)">71</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:71%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent4)">50</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:50%;background:var(--accent4)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s4-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary">貴店は「接客・サービス」「コスパ」で高評価を得ており、顧客満足の基盤は確立されています。しかし<b>最終レビューから447日経過</b>している点が最大の課題です。東中野エリアは陽ので接骨院（★4.9/261件）など口コミ豊富な競合が上位を占め、検索順位は286店舗中211位と厳しい状況です。
+
+<b>即時対応すべきは2つ</b>：①既存25件への返信で信頼性を可視化（2026年のAI検索は返信率を重視）、②来店客へのレビュー依頼で週2件ペースを目指すこと。
+
+加えて<b>GBPのメニュー/サービス欄が未設定</b>（0点）な点も機会損失です。「60分3,980円もみほぐし」等の具体的な施術内容を登録すれば、価格重視層の検索に引っかかりやすくなります。</div>
+    </div>
+  </div>
+
+  <!-- Store 5: S中野早稲田通り -->
+  <div class="detail-panel" id="store5">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">マッサージ ほぐしやす S中野早稲田通り店</div>
+        <div class="panel-addr">〒164-0001 東京都中野区中野5丁目51-3　|　★4.8 / 口コミ17件</div>
+        <div class="panel-tagline">👉 エリア平均以下・総合要改善(36pt)、口コミ品質が強み、口コミ鮮度の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-E">E</div>
+        <div class="panel-score-total">総合 <strong>36.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store5')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">41点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">39点</span><div class="cat-benchmark">平均: 60</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">10点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">49点</span><div class="cat-benchmark">平均: 65</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">32点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s5','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s5','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s5','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s5','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s5','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s5-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 2件 &nbsp;|&nbsp; 改善推奨: 3件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>レビュー鮮度不足</td><td><span class="severity-high">高</span></td><td>エリア平均を40pt下回る</td><td>10</td><td>50</td></tr>
+          <tr><td>2</td><td>MEO最適化不足</td><td><span class="severity-high">高</span></td><td>エリア平均を21pt下回る</td><td>39</td><td>60</td></tr>
+          <tr><td>3</td><td>レビュー数不足</td><td><span class="severity-mid">中</span></td><td>エリア平均を18pt下回る</td><td>32</td><td>50</td></tr>
+          <tr><td>4</td><td>レビュー品質不足</td><td><span class="severity-mid">中</span></td><td>エリア平均を16pt下回る</td><td>49</td><td>65</td></tr>
+          <tr><td>5</td><td>接客・サービスへの不満</td><td><span class="severity-mid">中</span></td><td>ネガティブ3件が接客・サービスに言及</td><td>3件</td><td>5件以下</td></tr>
+          <tr><td>6</td><td>競合力不足</td><td><span class="severity-low">低</span></td><td>エリア平均を9pt下回る</td><td>41</td><td>50</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s5-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 3件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">定期的なレビュー依頼フローの構築</div><div class="action-desc">レビュー鮮度の向上で検索アルゴリズムへの好影響が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">2</div><div class="action-main"><div class="action-title">GBP設定の改善（写真追加、投稿、カテゴリ最適化）</div><div class="action-desc">GBPの充実度が上がり、検索表示の改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">3</div><div class="action-main"><div class="action-title">来店客へのレビュー依頼を仕組み化する</div><div class="action-desc">レビュー獲得ペースが向上し、エリア中央値への到達が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item"><div class="action-num">4</div><div class="action-main"><div class="action-title">ネガティブ要因の特定と改善</div><div class="action-desc">ネガティブレビューの減少と評価改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">5</div><div class="action-main"><div class="action-title">スタッフ研修・接客マニュアル整備</div><div class="action-desc">接客品質の安定化でネガティブレビューの減少が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">6</div><div class="action-main"><div class="action-title">差別化ポイントの強化（強みのレビュー訴求）</div><div class="action-desc">競合との差別化が進み、選ばれる理由が明確になる</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s5-ranking">
+      <div class="kw-badge">🔍 「中野 マッサージ」 <span>現在 4位</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 46</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 51</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">1位</span><div class="sim-score">スコア: 55</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>GBPの説明・サービス欄に「マッサージ」「中野」「早稲田通り」を明示</li><li>既存顧客17件に対してレビュー投稿案内を強化（月3〜5件目標）</li><li>写真・動画セクションに施術風景・店舗内観を10枚以上追加</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>6ヶ月で30件以上、12ヶ月で50件以上のレビュー増加</li><li>評価★4.8を維持しながら、レビュー数を上位平均70件に到達させる</li><li>週1回のGoogle投稿でキャンペーン・新サービスを発信</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s5-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent3)">39</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent3)">35</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:35%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--accent3)">48</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:48%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent2)">14</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:14%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent3)">29</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:29%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--accent3)">70</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:70%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent4)">47</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:47%;background:var(--accent4)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s5-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary"><b>高評価4.8を獲得しながらも、エリア内80位に留まる最大の要因は「レビュー鮮度」です。</b> 現在のペースは0件/週ですが、spa業界では週2件が標準。口コミからは「首のオイルマッサージで劇的に楽になった」という具体的な施術効果が評価されており、技術力という明確な強みがあります。
+
+<b>最優先アクションは「レビュー返信の即時実施」です。</b> 2026年のAI検索では、店舗とのインタラクション履歴が重視されます。全17件への丁寧な返信は、AI検索エンジンに「アクティブな店舗」と認識させる即効性のある施策です。同時にGBPへ「メニュー/サービス」登録（現在0点）を行い、「首オイルマッサージ」など具体的な施術名を明記することで、検索意図とのマッチング精度が向上します。</div>
+    </div>
+  </div>
+
+  <!-- Store 6: フィクションスパイス -->
+  <div class="detail-panel" id="store6">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-store-name">フィクションスパイス</div>
+        <div class="panel-addr">〒169-0075 東京都新宿区高田馬場4丁目13-12 東海林ビル 2階　|　★4.6 / 口コミ105件</div>
+        <div class="panel-tagline">👉 エリアトップクラス・総合要改善(59pt)、口コミ品質が強み、口コミ鮮度の改善が鍵</div>
+      </div>
+      <div class="panel-grade-box">
+        <div class="panel-grade-large grade-D">D</div>
+        <div class="panel-score-total">総合 <strong>59.0</strong>/100</div>
+      </div>
+      <button class="panel-close" onclick="togglePanel('store6')">✕ 閉じる</button>
+    </div>
+    <div class="cat-scores">
+      <div class="cat-score-item"><span class="cat-name">競合力</span><span class="cat-grade" style="color:var(--grade-b)">B</span><span class="cat-score-num">72点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">MEO最適化</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">48点</span><div class="cat-benchmark">平均: 60</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ鮮度</span><span class="cat-grade" style="color:var(--grade-e)">E</span><span class="cat-score-num">22点</span><div class="cat-benchmark">平均: 50</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ品質</span><span class="cat-grade" style="color:var(--grade-b)">B</span><span class="cat-score-num">76点</span><div class="cat-benchmark">平均: 65</div></div>
+      <div class="cat-score-item"><span class="cat-name">口コミ量</span><span class="cat-grade" style="color:var(--grade-c)">C</span><span class="cat-score-num">60点</span><div class="cat-benchmark">平均: 50</div></div>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'s6','bottleneck')">ボトルネック</button>
+      <button class="tab-btn" onclick="switchTab(this,'s6','action')">アクションプラン</button>
+      <button class="tab-btn" onclick="switchTab(this,'s6','ranking')">ランキング予測</button>
+      <button class="tab-btn" onclick="switchTab(this,'s6','meo')">MEO最適化</button>
+      <button class="tab-btn" onclick="switchTab(this,'s6','ai')">AI分析</button>
+    </div>
+    <div class="tab-content active" id="s6-bottleneck">
+      <p style="font-size:13px;color:var(--accent2);margin-bottom:16px;font-weight:700">重大な課題: 2件 &nbsp;|&nbsp; 改善推奨: 1件</p>
+      <table class="bn-table">
+        <thead><tr><th>#</th><th>カテゴリ</th><th>深刻度</th><th>影響</th><th>現状</th><th>目標</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>レビュー鮮度不足</td><td><span class="severity-high">高</span></td><td>エリア平均を28pt下回る</td><td>22</td><td>50</td></tr>
+          <tr><td>2</td><td>コスパへの不満</td><td><span class="severity-high">高</span></td><td>ネガティブ8件がコスパに言及</td><td>8件</td><td>5件以下</td></tr>
+          <tr><td>3</td><td>MEO最適化不足</td><td><span class="severity-mid">中</span></td><td>エリア平均を12pt下回る</td><td>48</td><td>60</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="s6-action">
+      <p style="font-size:12px;color:var(--grade-s);margin-bottom:16px;font-weight:700">⚡ クイックウィン: 2件</p>
+      <div class="action-list">
+        <div class="action-item quick-win"><div class="action-num">1</div><div class="action-main"><div class="action-title">定期的なレビュー依頼フローの構築</div><div class="action-desc">レビュー鮮度の向上で検索アルゴリズムへの好影響が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+        <div class="action-item quick-win"><div class="action-num">2</div><div class="action-main"><div class="action-title">価格設定の見直しまたは付加価値の訴求</div><div class="action-desc">コストパフォーマンスの印象改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-mid">中程度</span><span class="action-period">1〜3ヶ月</span></div></div>
+        <div class="action-item"><div class="action-num">3</div><div class="action-main"><div class="action-title">GBP設定の改善（写真追加、投稿、カテゴリ最適化）</div><div class="action-desc">GBPの充実度が上がり、検索表示の改善が見込める</div></div><div class="action-meta"><span class="action-tag tag-low">低コスト</span><span class="action-period">1ヶ月以内</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s6-ranking">
+      <div class="kw-badge">🔍 「高田馬場 ダイニングバー」 <span>現在 圏外</span></div>
+      <div class="ranking-sim">
+        <div class="sim-card"><div class="sim-period">3ヶ月後</div><span class="sim-rank">2位</span><div class="sim-score">スコア: 62</div></div>
+        <div class="sim-card"><div class="sim-period">6ヶ月後</div><span class="sim-rank">2位</span><div class="sim-score">スコア: 64</div></div>
+        <div class="sim-card"><div class="sim-period">12ヶ月後</div><span class="sim-rank">2位</span><div class="sim-score">スコア: 65</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="roadmap-col"><div class="roadmap-heading">⚡ クイックウィン</div><ul class="roadmap-items"><li>GBP説明文に「高田馬場のダイニングバー」「スパイス料理」などのキーワードを挿入</li><li>カテゴリを「bar」→「ダイニングバー」に変更し「bar, restaurant」に統一</li><li>既存105件のレビューにキーワードを含む返信を10件以上実施</li><li>写真を「ダイニングバー」「スパイス料理」に関連する画像に最適化</li></ul></div>
+        <div class="roadmap-col"><div class="roadmap-heading">🎯 長期施策</div><ul class="roadmap-items"><li>Google投稿機能でキーワードを含む投稿を週1回以上（3ヶ月継続）</li><li>★5.0達成を目指し、低評価レビューへの丁寧な返信で改善意思を示す</li><li>食べログ・ぐるなび・Rettyでのキーワード最適化</li></ul></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s6-meo">
+      <div style="margin-bottom:16px"><span style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--accent4)">48</span><span style="font-size:13px;color:var(--text-muted);margin-left:8px">MEO総合スコア</span></div>
+      <div class="meo-grid">
+        <div class="meo-metric"><div class="meo-metric-name">エンゲージメント</div><div class="meo-metric-val" style="color:var(--accent3)">41</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:41%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">鮮度</div><div class="meo-metric-val" style="color:var(--accent3)">56</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:56%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ローカル関連性</div><div class="meo-metric-val" style="color:var(--accent2)">4</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:4%;background:var(--accent2)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">人気度</div><div class="meo-metric-val" style="color:var(--accent3)">45</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:45%;background:var(--accent3)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">信頼性</div><div class="meo-metric-val" style="color:var(--grade-s)">79</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:79%;background:var(--grade-s)"></div></div></div>
+        <div class="meo-metric"><div class="meo-metric-name">ビジュアル</div><div class="meo-metric-val" style="color:var(--accent4)">59</div><div class="meo-bar-bg"><div class="meo-bar-fill" style="width:59%;background:var(--accent4)"></div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="s6-ai">
+      <div class="ai-label"><div class="ai-dot"></div><span class="ai-label-text">AI分析サマリー</span></div>
+      <div class="ai-summary">フィクションスパイス様は、ジンの専門知識と料理のクオリティで★4.6という高評価を獲得されており、顧客体験の基盤は非常に優れています。しかし<b>最新レビューが24日前で週0.2件ペース</b>（業界目標4件/週）と、口コミ獲得が完全に停滞しており、これがエリア内1093位という順位の最大要因です。
+
+特に懸念されるのは、低評価口コミで「店長交代後にルー量激減・接客低下」という具体的指摘がある点です。<b>早急な返信と改善姿勢の可視化</b>が必須です。
+
+最優先アクションは<b>Q&A機能の整備</b>（現在20点）です。「ジンの種類は？」「予約必要？」など想定質問を10件登録することで、AI検索が店舗情報を正確に理解し、「ジン専門店」としての露出が劇的に向上します。会計時に「口コミお願いカード」を渡し、週4件ペースを回復させることで、3ヶ月以内に上位500位圏内が見込めます。</div>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  © 2026 MEOSCOPE — Google Maps データ分析プラットフォーム &nbsp;|&nbsp; 分析日: 2026.04.11
+</footer>
+
+<script>
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  const isActive = panel.classList.contains('active');
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+  if (!isActive) {
+    panel.classList.add('active');
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+}
+function switchTab(btn, prefix, tabName) {
+  const panel = btn.closest('.detail-panel');
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(prefix + '-' + tabName).classList.add('active');
+}
+</script>
+</body>
+</html>
